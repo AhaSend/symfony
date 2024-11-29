@@ -18,14 +18,11 @@
     "require": {
         "php": ">=8.2",
         "psr/event-dispatcher": "^1",
-        "symfony/mailer": "^7.2"
+        "symfony/mailer": "^7.3"
     },
     "require-dev": {
         "symfony/http-client": "^6.4|^7.0",
         "symfony/webhook": "^6.4|^7.0"
-    },
-    "conflict": {
-        "symfony/http-foundation": "<6.4"
     },
     "autoload": {
         "psr-4": { "Symfony\\Component\\Mailer\\Bridge\\AhaSend\\": "" },
