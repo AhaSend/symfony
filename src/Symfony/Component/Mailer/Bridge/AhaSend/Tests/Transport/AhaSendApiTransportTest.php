@@ -92,7 +92,6 @@ class AhaSendApiTransportTest extends TestCase
             ]);
         });
 
-
         $mailer = new AhaSendApiTransport('foo', $client);
         $mailer->send($email);
     }
