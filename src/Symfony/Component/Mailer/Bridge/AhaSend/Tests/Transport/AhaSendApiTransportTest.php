@@ -63,75 +63,55 @@ class AhaSendApiTransportTest extends TestCase
             ->html('<html lang="en"><body><p>Test email body</p></body></html>')
             ->replyTo(new Address('bar2@example.com', 'Mr. Recipient'));
 
-        $response = $this->createMock(JsonMockResponse::class);
-        $response->method('toArray')->willReturn([
-            'success_count' => 2,
-            'fail_count' => 0,
-            'failed_recipients' => [],
-            'errors' => [],
-        ]);
-        $response
-            ->expects($this->once())
-            ->method('getStatusCode')
-            ->willReturn(201);
-        $httpClient = $this->createMock(MockHttpClient::class);
-        $httpClient
-            ->expects($this->once())
-            ->method('request')
-            ->with('POST', 'https://send.ahasend.com/v1/email/send', [
-                'json' => [
-                    'from' => [
-                        'email' => 'foo@example.com',
-                        'name' => 'Ms. Foo Bar',
-                    ],
-                    'recipients' => [
-                        [
-                            'email' => 'bar@example.com',
-                            'name' => 'Mr. Recipient',
-                        ],
-                        [
-                            'email' => 'baz@example.com',
-                        ],
-                    ],
-                    'content' => [
-                        'subject' => 'An email',
-                        'text_body' => 'Test email body',
-                        'html_body' => '<html lang="en"><body><p>Test email body</p></body></html>',
-                        'reply_to' => [
-                            'email' => 'bar2@example.com',
-                            'name' => 'Mr. Recipient',
-                        ],
-                        'headers' => [
-                            'Bcc' => 'baz@example.com',
-                        ],
-                    ],
-                ],
-                'headers' => [
-                    'X-Api-Key' => 'foo',
-                ],
-            ])
-            ->willReturn($response);
+        $client = new MockHttpClient(function (string $method, string $url, array $options): ResponseInterface {
+            $this->assertSame('POST', $method);
+            $this->assertSame('https://send.ahasend.com/v1/email/send', $url);
+            $this->assertStringContainsString('X-Api-Key: foo', $options['headers'][0] ?? $options['request_headers'][0]);
 
-        $mailer = new AhaSendApiTransport('foo', $httpClient);
+            $body = json_decode($options['body'], true);
+            $this->assertSame('foo@example.com', $body['from']['email']);
+            $this->assertSame('Ms. Foo Bar', $body['from']['name']);
+            $this->assertSame('bar@example.com', $body['recipients'][0]['email']);
+            $this->assertSame('Mr. Recipient', $body['recipients'][0]['name']);
+            $this->assertSame('baz@example.com', $body['recipients'][1]['email']);
+            $this->assertArrayNotHasKey('name', $body['recipients'][1]);
+            $this->assertSame('An email', $body['content']['subject']);
+            $this->assertSame('Test email body', $body['content']['text_body']);
+            $this->assertSame('<html lang="en"><body><p>Test email body</p></body></html>', $body['content']['html_body']);
+            $this->assertSame('bar2@example.com', $body['content']['reply_to']['email']);
+            $this->assertSame('Mr. Recipient', $body['content']['reply_to']['name']);
+            $this->assertSame('baz@example.com', $body['content']['headers']['Bcc']);
+
+            return new JsonMockResponse([
+                'success_count' => 3,
+                'fail_count' => 0,
+                'failed_recipients' => [],
+                'errors' => [],
+            ], [
+                'http_code' => 201,
+            ]);
+        });
+
+
+        $mailer = new AhaSendApiTransport('foo', $client);
         $mailer->send($email);
     }
 
     public function testSendDeliveryEventIsDispatched()
     {
-        $client = new MockHttpClient(function (string $method, string $url, array $options): ResponseInterface {
-            return new JsonMockResponse([
-                'success_count' => 0,
-                'fail_count' => 1,
-                'failed_recipients' => [
-                    'someone@gmil.com',
-                ],
-                'errors' => [
-                    'someone@gmil.com: Invalid recipient',
-                ],
-            ], [
-                'http_code' => 201,
-            ]);
-        });
+        $responseFactory = new JsonMockResponse([
+            'success_count' => 0,
+            'fail_count' => 1,
+            'failed_recipients' => [
+                'someone@gmil.com',
+            ],
+            'errors' => [
+                'someone@gmil.com: Invalid recipient',
+            ],
+        ], [
+            'http_code' => 201,
+        ]);
+        $client = new MockHttpClient($responseFactory);
 
         $email = new Email();
         $email->from(new Address('foo@example.com', 'Ms. Foo Bar'))
