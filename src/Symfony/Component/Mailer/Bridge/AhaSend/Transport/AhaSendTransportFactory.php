@@ -39,11 +39,11 @@ final class AhaSendTransportFactory extends AbstractTransportFactory
             $transport = new AhaSendSmtpTransport($user, $password, $this->dispatcher, $this->logger);
         }
 
-        if (null !== $transport) {
-            return $transport;
+        if (null === $transport) {
+            throw new UnsupportedSchemeException($dsn, 'ahasend', $this->getSupportedSchemes());
         }
 
-        throw new UnsupportedSchemeException($dsn, 'ahasend', $this->getSupportedSchemes());
+        return $transport;
     }
 
     protected function getSupportedSchemes(): array

@@ -53,11 +53,7 @@ final class AhaSendRequestParser extends AbstractRequestParser
         if ($signature !== $expectedSignature) {
             throw new RejectWebhookException(406, 'Invalid signature');
         }
-        if (
-            !isset($payload['type'])
-            || !isset($payload['timestamp'])
-            || !(isset($payload['data']))
-        ) {
+        if (!isset($payload['type']) || !isset($payload['timestamp']) || !(isset($payload['data']))) {
             throw new RejectWebhookException(406, 'Payload is malformed.');
         }
 
@@ -68,7 +64,8 @@ final class AhaSendRequestParser extends AbstractRequestParser
         }
     }
 
-    private function sign(string $eventID, string $timestamp, string $payload, $secret) : string {
+    private function sign(string $eventID, string $timestamp, string $payload, $secret) : string
+    {
         $signaturePayload = "{$eventID}.{$timestamp}.{$payload}";
         $hash = hash_hmac('sha256', $signaturePayload, $secret);
         $signature = base64_encode(pack('H*', $hash));

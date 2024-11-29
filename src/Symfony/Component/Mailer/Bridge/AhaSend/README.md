@@ -1,5 +1,5 @@
 AhaSend Bridge
-===============
+==============
 
 Provides AhaSend integration for Symfony Mailer.
 

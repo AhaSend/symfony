@@ -90,7 +90,7 @@ return static function (ContainerConfigurator $container) {
 
         ->set('mailer.payload_converter.ahasend', AhaSendPayloadConverter::class)
         ->set('mailer.webhook.request_parser.ahasend', AhaSendRequestParser::class)
-        ->args([service('mailer.payload_converter.ahasend')])
+            ->args([service('mailer.payload_converter.ahasend')])
         ->alias(AhaSendRequestParser::class, 'mailer.webhook.request_parser.ahasend')
 
         ->set('mailer.payload_converter.mailchimp', MailchimpPayloadConverter::class)

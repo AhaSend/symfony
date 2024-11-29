@@ -164,7 +164,7 @@ final class AhaSendApiTransport extends AbstractApiTransport
             $headers = $attachment->getPreparedHeaders();
 
             $contentType = $headers->get('Content-Type')->getBody();
-            $base64 = ('text/plain' !== $contentType);
+            $base64 = 'text/plain' !== $contentType;
             $disposition = $headers->getHeaderBody('Content-Disposition');
 
             if ($base64) {
